@@ -225,7 +225,7 @@ class LinkedList {
     .map(student => student.getString())
     .join("\n");
     // TODO
-    return [];
+    //return [];
   }
 
   /**
