@@ -222,8 +222,7 @@ class LinkedList {
     let sortedStudents = this.#sortStudentsByName();
 
     return sortedStudents.filter(student => student.getSpecialization() === specialization)
-    .map(student => student.getString())
-    .join("\n");
+
     // TODO
     //return [];
   }
