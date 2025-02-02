@@ -47,6 +47,21 @@ async function handleCommand(command) {
         console.log('Adding student...')
         const [name, year, email, specialization] = args
         // --------> WRITE YOUR CODE BELOW
+     
+      if (!name || !year || !email || !specialization) {
+        console.log('Error: All fields (name, year, email, specialization) are required');
+        break;
+      }
+      //creating and adding new student
+      const newStudent = new Student(name, parseInt(year), email, specialization);
+      console.log('Created new student:', newStudent.getString());
+    
+      studentManagementSystem.addStudent(newStudent);
+      console.log('Student added to system');
+
+      //Dispalying updated list
+      console.log('Current students:');
+      console.log(studentManagementSystem.displayStudents());        
 
         // --------> WRITE YOUR CODE ABOVE
         break;
@@ -62,6 +77,26 @@ async function handleCommand(command) {
        */
       console.log('Removing student...')
       // --------> WRITE YOUR CODE BELOW
+      //removes stundent by email
+      const removeEmail = args[0];
+    
+      // Debug logs
+      console.log('Attempting to remove student with email:', removeEmail);
+      //check for email
+      if (!removeEmail) {
+        console.log('Error: Email is required');
+        break;
+      }
+      //removing student
+      let studentToRemove = studentManagementSystem.findStudent(removeEmail);
+      if (studentToRemove === -1) {
+        console.log('Student not found');
+      } else {
+        studentManagementSystem.removeStudent(removeEmail);
+        console.log('Student removed successfully');
+        console.log('Updated list:', studentManagementSystem.displayStudents());
+      }
+      
       
       // --------> WRITE YOUR CODE ABOVE
       break;
@@ -75,6 +110,14 @@ async function handleCommand(command) {
        */
       console.log('Displaying students...')
       // --------> WRITE YOUR CODE BELOW
+      const students = studentManagementSystem.displayStudents();
+      if (!students || students === "") {
+        console.log("No students in the system");
+      } else {
+        console.log("Current students:", students);
+      }
+
+      
 
       // --------> WRITE YOUR CODE ABOVE
       break;
@@ -91,6 +134,19 @@ async function handleCommand(command) {
        */
       console.log('Finding student...')
       // --------> WRITE YOUR CODE BELOW
+      const findEmail = args[0];
+    
+      if (!findEmail) {
+        console.log('Error: Email is required');
+        break;
+      }
+
+      const foundStudent = studentManagementSystem.findStudent(findEmail);
+      if (foundStudent === -1) {
+        console.log("Student does not exist");
+      } else {
+        console.log(foundStudent.getString());
+      }
       
       // --------> WRITE YOUR CODE ABOVE
       break;
@@ -101,14 +157,19 @@ async function handleCommand(command) {
        *  Saves the current LinkedList to a specified JSON file
        *  You will need to do the following:
        *   - Implement LinkedList (run tests locally to check implementation)
-       *   - Grab the args (saveFileName)
+       *   - Grab the args (savefileName)
        *   - Use implemented functions in LinkedList to save the data
        */
       console.log('Saving data...')
       // --------> WRITE YOUR CODE BELOW
-
+      try{
+        await studentManagementSystem.saveToJson('data.json');
+        console.log('Data saved to data.json');
+      } catch (error){
+        console.log('Error saving data:', error.message);
+      }
       // --------> WRITE YOUR CODE ABOVE
-
+      break;
     case "load":
       /**
        * TODO:
@@ -120,6 +181,13 @@ async function handleCommand(command) {
        */
       console.log('Loading data...')
       // --------> WRITE YOUR CODE BELOW
+      try{
+        await studentManagementSystem.loadFromJSON('data.json');
+        console.log('Data loaded from data.json');
+        console.log(studentManagementSystem.displayStudents());
+      } catch (error){
+        console.log('Error loading data:', error.message);
+      }
 
       // --------> WRITE YOUR CODE ABOVE
       break;
@@ -134,6 +202,8 @@ async function handleCommand(command) {
        */
       console.log('Clearing data...')
       // --------> WRITE YOUR CODE BELOW
+      studentManagementSystem.clearStudents();
+      console.log('Data cleared');
 
       // --------> WRITE YOUR CODE ABOVE
       break;

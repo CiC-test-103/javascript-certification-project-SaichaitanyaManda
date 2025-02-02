@@ -36,6 +36,9 @@ class LinkedList {
    * RETURNS:   None
    */
   constructor() {
+    this.head = null;
+    this.length = 0;
+    this.tail = null; 
     // TODO
   }
 
@@ -48,6 +51,32 @@ class LinkedList {
    * - Think about adding to the 'end' of the LinkedList (Hint: tail)
    */
   addStudent(newStudent) {
+    // conversion to student instance
+    let dataStudent;
+    if (newStudent instanceof Student) {
+      dataStudent = newStudent; // If already a Student instance, use it
+  } else {
+      dataStudent = new Student(
+        newStudent.name,
+        newStudent.year,
+        newStudent.email,
+        newStudent.specialization
+      );
+  }
+
+  //create new node with student data
+  let node = new Node(dataStudent);
+  //empty handeling
+  if (!this.head) {
+      this.head = node;
+      this.tail = node;
+  } 
+  //update tail
+  else {
+      this.tail.next = node;
+      this.tail = node; 
+  }
+  this.length++;
     // TODO
   }
 
@@ -60,8 +89,43 @@ class LinkedList {
    * - Think about how removal might update head or tail
    */
   removeStudent(email) {
+    //empty handeling
+    if (!this.head){
+      console.log("Error: No students to remove.");
+      return;
+    }
+
+    // If head node holds the email
+    if (this.head.data.getEmail() === email) {
+        console.log(`Removing student: ${this.head.data.getString()}`);
+        this.head = this.head.next;
+        this.length--;
+        return;
+    }
+
+    // Search for the email to be deleted
+    let current = this.head;
+    let prev = null;
+    while (current && current.data.getEmail() !== email) {
+      prev = current;
+      current = current.next;
+    }
+    //if student not found
+    if (!current) { 
+      console.log("Error: Student not found.");
+      return;
+    }
+
+    console.log(`Removing student: ${current.data.getString()}`);
+    prev.next = current.next; 
+    this.length--;
+    //warning if list empty
+    if (this.length === 0) {
+     console.warn("Warning: No students left after removal!");
+    }
+  
     // TODO
-  }
+}
 
   /**
    * REQUIRES:  email (String)
@@ -69,6 +133,20 @@ class LinkedList {
    * RETURNS:   The Student or -1 if not found
    */
   findStudent(email) {
+
+    if(!this.head){
+      return -1;
+    }
+    //search student
+    let current = this.head;
+
+    while(current){
+      if(current.data.getEmail() === email){
+        return current.data;
+      }
+      current = current.next;
+    }
+
     // TODO
     return -1
   }
@@ -78,7 +156,10 @@ class LinkedList {
    * EFFECTS:   Clears all students from the Linked List
    * RETURNS:   None
    */
-  #clearStudents() {
+  clearStudents() {
+    this.head = null;
+    this.tail = null;
+    this.length = 0;
     // TODO
   }
 
@@ -91,9 +172,19 @@ class LinkedList {
    *  - Output should appear as: "JohnDoe, JaneDoe"
    */
   displayStudents() {
+    if(!this.head){     //if empty list
+      return "no students in the system.";
+    }
+    let sortedStudents = this.#sortStudentsByName();
+
+    return sortedStudents.map(student => student.getName()).join(", ");
+
+
     // TODO
-    return "";
+    //return output.join(", ");     //join names with comma
+
   }
+  
 
   /**
    * REQUIRES:  None
@@ -101,8 +192,23 @@ class LinkedList {
    * RETURNS:   A sorted array of students by name
    */
   #sortStudentsByName() {
+    let studentsArray = [];
+    let current = this.head;
+
+    if(!this.head){     //if empty list
+      return [];
+    }
+    
+    while(current){     //goes through the list of sudent names
+      studentsArray.push(current.data);
+      current = current.next;
+    }
+
+    studentsArray.sort((a, b) => a.getName().localeCompare(b.getName())); // Cleaner
+
+    //studentsArray.sort((a, b) =>  {return a.getName().localeCompare(b.getName())});
     // TODO
-    return [];
+    return studentsArray;
   }
 
   /**
@@ -113,6 +219,11 @@ class LinkedList {
    * - Use sortStudentsByName()
    */
   filterBySpecialization(specialization) {
+    let sortedStudents = this.#sortStudentsByName();
+
+    return sortedStudents.filter(student => student.getSpecialization() === specialization)
+    .map(student => student.getString())
+    .join("\n");
     // TODO
     return [];
   }
@@ -124,9 +235,16 @@ class LinkedList {
    * CONSIDERATIONS:
    * - Use sortStudentsByName()
    */
-  filterByMinAge(minAge) {
+  filterByMinYear(minYear) {
+    let sortedStudents = this.#sortStudentsByName();
+
+    return sortedStudents
+      .filter(student => student.getYear() >= minYear)
+      .map(student => student.getString())
+      .join("\n");
+
     // TODO
-    return [];
+    //return [];
   }
 
   /**
@@ -135,8 +253,38 @@ class LinkedList {
    * RETURNS:   None
    */
   async saveToJson(fileName) {
+    const fs = require('fs').promises;
+    let studentsArray = [];
+    let current = this.head;
+
+    while(current){
+      studentsArray.push({
+        name: current.data.getName(),
+        year: current.data.getYear(),
+        email: current.data.getEmail(),
+        specialization: current.data.getSpecialization()
+      });
+      current = current.next;
+    }
+    if (studentsArray.length === 0) {
+      console.warn("Warning: No students to save!");
+      return; // Prevent overwriting with empty data
+    }
+
+    try {
+      const jsonContent = JSON.stringify(studentsArray, null, 2);
+      await fs.writeFile(fileName, jsonContent, 'utf8');
+      console.log("Data successfully saved!");
+    } catch (error) {
+      console.error("Error saving to JSON file:", error);
+      throw error;
+  
+
+      
+    }
     // TODO
   }
+  
 
   /**
    * REQUIRES:  A valid file name (String) that exists
@@ -146,9 +294,42 @@ class LinkedList {
    *  - Use clearStudents() to perform overwriting
    */
   async loadFromJSON(fileName) {
-    // TODO
+    const fs = require('fs').promises;
+
+    try {
+        const fileContent = await fs.readFile(fileName, 'utf-8');
+        
+        if (!fileContent.trim()) {  // Check for empty file
+            console.error("Error: JSON file is empty.");
+            return;
+        }
+
+        const studentsArray = JSON.parse(fileContent);
+        if (!Array.isArray(studentsArray)) {
+            console.error("Error: JSON data is not an array!");
+            return;
+        }
+
+        this.clearStudents();
+
+        studentsArray.forEach(studentData => {
+            const student = new Student(
+                studentData.name,
+                studentData.year,
+                studentData.email,
+                studentData.specialization
+            );
+            this.addStudent(student);
+        });
+
+        console.log("Data successfully loaded!");
+    } catch (error) {
+        console.error("Error loading from JSON file:", error);
+        throw error;
+    }
   }
 
 }
-
+//console.log(displayStudents());
+//list.filterBySpecialization("computerScience");
 module.exports = { LinkedList }
